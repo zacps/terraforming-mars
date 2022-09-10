@@ -1,18 +1,21 @@
 import {Units} from '../../common/Units';
 import {ICard} from '../cards/ICard';
+import {AddResourcesToCard} from '../deferredActions/AddResourcesToCard';
+import {DecreaseAnyProduction} from '../deferredActions/DecreaseAnyProduction';
+import {SimpleDeferredAction} from '../deferredActions/DeferredAction';
+import {RemoveAnyPlants} from '../deferredActions/RemoveAnyPlants';
 import {MoonExpansion} from '../moon/MoonExpansion';
 import {Player} from '../Player';
-import {InternalBehavior} from './Behavior';
+import {Behavior} from './Behavior';
 
 export class Behaviors {
-  public static canExecute(player: Player, _card: ICard, behavior: InternalBehavior) {
+  public static canExecute(player: Player, _card: ICard, behavior: Behavior) {
     if (behavior.production && !player.production.canAdjust(Units.of(behavior.production))) {
       return false;
     }
     if (behavior.stock !== undefined) {
-      const stock = behavior.stock;
       // Only supporting positive values for now.
-      if (Units.keys.some((key) => stock[key] < 0)) {
+      if (Units.keys.some((key) => (behavior.stock?.[key] ?? 0) < 0)) {
         throw new Error('Not supporting negative units for now.');
       }
 
@@ -20,10 +23,14 @@ export class Behaviors {
       //   return false;
       // }
     }
+    if (behavior.decreaseAnyProduction !== undefined) {
+      return player.canReduceAnyProduction(behavior.decreaseAnyProduction.type, behavior.decreaseAnyProduction.count);
+    }
+
     return true;
   }
 
-  public static execute(player: Player, _card: ICard, behavior: InternalBehavior) {
+  public static execute(player: Player, card: ICard, behavior: Behavior) {
     if (behavior.production !== undefined) {
       player.production.adjust(Units.of(behavior.production));
     }
@@ -51,6 +58,25 @@ export class Behaviors {
 
     if (behavior.tr !== undefined) {
       player.increaseTerraformRatingSteps(behavior.tr);
+    }
+    if (behavior.addResources !== undefined) {
+      player.game.defer(new SimpleDeferredAction(player, () => {
+        player.addResourceTo(card, behavior.addResources);
+        return undefined;
+      }));
+    }
+
+    if (behavior.addResourcesToAnyCard) {
+      const array = Array.isArray(behavior.addResourcesToAnyCard) ? behavior.addResourcesToAnyCard : [behavior.addResourcesToAnyCard];
+      for (const entry of array) {
+        player.game.defer(new AddResourcesToCard(player, entry.type, {count: entry.count}));
+      }
+    }
+    if (behavior.decreaseAnyProduction !== undefined) {
+      player.game.defer(new DecreaseAnyProduction(player, behavior.decreaseAnyProduction.type, {count: behavior.decreaseAnyProduction.count}));
+    }
+    if (behavior.removeAnyPlants !== undefined) {
+      player.game.defer(new RemoveAnyPlants(player, behavior.removeAnyPlants));
     }
   }
 }
