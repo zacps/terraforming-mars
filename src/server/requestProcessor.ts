@@ -20,12 +20,14 @@ import {Route} from './routes/Route';
 import {PlayerInput} from './routes/PlayerInput';
 import {ServeApp} from './routes/ServeApp';
 import {ServeAsset} from './routes/ServeAsset';
+import { ApiForkGame } from './routes/ApiForkGame';
 
 const handlers: Map<string, IHandler> = new Map(
   [
     ['/', ServeApp.INSTANCE],
     ['/admin', ServeApp.INSTANCE],
     ['/api/cloneablegame', ApiCloneableGame.INSTANCE],
+    ['/api/fork', ApiForkGame.INSTANCE],
     ['/api/game', ApiGame.INSTANCE],
     ['/api/game/history', ApiGameHistory.INSTANCE],
     ['/api/game/logs', ApiGameLogs.INSTANCE],
