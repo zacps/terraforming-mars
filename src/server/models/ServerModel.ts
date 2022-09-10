@@ -102,7 +102,13 @@ export class Server {
   public static getPlayerModel(player: Player): PlayerViewModel {
     const game = player.game;
 
-    const players: Array<PublicPlayerModel> = game.getPlayersInGenerationOrder().map(this.getPlayer);
+    if (!game) {
+      throw new Error("Player is not in a game");
+    }
+
+    const players: Array<PublicPlayerModel> = game
+      .getPlayersInGenerationOrder()
+      .map(this.getPlayer);
     const thisPlayerIndex = players.findIndex((p) => p.color === player.color);
     const thisPlayer: PublicPlayerModel = players[thisPlayerIndex];
 

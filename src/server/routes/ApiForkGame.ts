@@ -1,7 +1,6 @@
 import * as http from "http";
 import { Handler } from "./Handler";
 import { Context } from "./IHandler";
-import { Database } from "../database/Database";
 import { GameId, isGameId, PlayerId } from "../../common/Types";
 import { Cloner } from "../database/Cloner";
 import { Server } from "../models/ServerModel";
@@ -16,7 +15,11 @@ export class ApiForkGame extends Handler {
   // Copied from GameHandler
   private generateRandomId(prefix: string): string {
     // 281474976710656 possible values.
-    return prefix + Math.floor(Math.random() * Math.pow(16, 12)).toString(16);
+    return (
+      prefix +
+      `-clone-` +
+      Math.floor(Math.random() * Math.pow(16, 12)).toString(16)
+    );
   }
 
   public override async get(
@@ -35,14 +38,14 @@ export class ApiForkGame extends Handler {
     }
 
     const game = await ctx.gameLoader.getGame(gameId);
-    if (game === undefined) {
+    if (!game) {
       ctx.route.notFound(req, res, "game not found");
       return;
     }
 
     const existingPlayersInOrder = game.getPlayersInGenerationOrder();
-    const newPlayers = existingPlayersInOrder.map((player) => {
-      const newPlayerId = this.generateRandomId("p") as PlayerId;
+    const seedNewPlayers = existingPlayersInOrder.map((player) => {
+      const newPlayerId = this.generateRandomId(player.id) as PlayerId;
       return new Player(
         player.name,
         player.color,
@@ -52,17 +55,23 @@ export class ApiForkGame extends Handler {
       );
     });
 
-    const newGameId: GameId = this.generateRandomId("g") as GameId;
+    const newGameId: GameId = this.generateRandomId(game.id) as GameId;
+    const clonedGame = Cloner.clone(
+      newGameId,
+      seedNewPlayers,
+      0,
+      game.serialize()
+    );
 
-    const clonedGame = Cloner.clone(newGameId, newPlayers, 0, game.serialize());
+    // Not async for some reason?
+    clonedGame.save();
 
-    await Database.getInstance().saveGame(clonedGame);
+    const gamePlayers = clonedGame.getPlayersInGenerationOrder();
 
-    const gameModel = Server.getGameModel(clonedGame);
+    const playerModels = gamePlayers.map((p) => Server.getPlayerModel(p));
 
     ctx.route.writeJson(res, {
-      state: gameModel,
-      players: [],
+      states: playerModels,
     });
   }
 }
