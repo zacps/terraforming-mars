@@ -67,11 +67,19 @@ export class ApiForkGame extends Handler {
     clonedGame.save();
 
     const gamePlayers = clonedGame.getPlayersInGenerationOrder();
+    const playerIdMapping = existingPlayersInOrder.reduce((acc, p, idx) => {
+      acc[p.id] = gamePlayers[idx].id;
+      return acc;
+    }, {} as Record<PlayerId, PlayerId>);
 
-    const playerModels = gamePlayers.map((p) => Server.getPlayerModel(p));
+    const gameModel = Server.getGameModel(clonedGame);
+    const simplePlayerModels = Server.getSimpleGameModel(clonedGame).players;
 
     ctx.route.writeJson(res, {
-      states: playerModels,
+      players: simplePlayerModels,
+      playerIdMapping: playerIdMapping,
+      game: gameModel,
+      gameId: clonedGame.id,
     });
   }
 }
