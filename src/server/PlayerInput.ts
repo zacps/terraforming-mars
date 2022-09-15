@@ -23,6 +23,7 @@ export namespace PlayerInput {
   export function getCard<T extends ICard>(cards: Array<T>, cardName: string): {card: T, idx: number} {
     const idx = cards.findIndex((card) => card.name === cardName);
     if (idx === -1) {
+      console.log(`PlayerInput/getCard [${cards.map(card=>card.name)}][${cardName}]`)
       throw new Error(`Card ${cardName} not found`);
     }
     const card = cards[idx];

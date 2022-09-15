@@ -15,6 +15,7 @@ export class AndOptions implements PlayerInput {
   public process(input: InputResponse, player: Player) {
     player.checkInputLength(input, this.options.length);
     for (let i = 0; i < input.length; i++) {
+      console.log(`OrOptions/process ${this.options[i]}`);
       player.runInput([input[i]], this.options[i]);
     }
     return this.cb();

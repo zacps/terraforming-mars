@@ -78,6 +78,7 @@ export class PlayerInput extends Handler {
     ctx: Context,
     player: Player,
   ): Promise<void> {
+    console.assert(player !== undefined, "player was undefined");
     return new Promise((resolve) => {
       let body = '';
       req.on('data', (data) => {

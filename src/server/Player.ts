@@ -747,6 +747,7 @@ export class Player {
   }
 
   public runInput(input: InputResponse, pi: PlayerInput): void {
+    console.assert(pi !== undefined, "pi is undefined")
     this.deferInputCb(pi.process(input, this));
   }
 
@@ -1867,6 +1868,7 @@ export class Player {
     this.waitingForCb = undefined;
     try {
       this.timer.stop();
+      console.log(`Player/process ${waitingFor}`);
       this.runInput(input, waitingFor);
       waitingForCb();
     } catch (err) {
