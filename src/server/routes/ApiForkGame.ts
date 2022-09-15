@@ -66,6 +66,10 @@ export class ApiForkGame extends Handler {
     // Not async for some reason?
     clonedGame.save();
 
+    // Required to update the participants cache (otherwise moves will fail to find the game).
+    // Doesn't appear to write to the database.
+    await ctx.gameLoader.add(clonedGame);
+
     const gamePlayers = clonedGame.getPlayersInGenerationOrder();
     const playerIdMapping = existingPlayersInOrder.reduce((acc, p, idx) => {
       acc[p.id] = gamePlayers[idx].id;
