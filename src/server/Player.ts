@@ -1868,7 +1868,6 @@ export class Player {
     this.waitingForCb = undefined;
     try {
       this.timer.stop();
-      console.log(`Player/process ${waitingFor}`);
       this.runInput(input, waitingFor);
       waitingForCb();
     } catch (err) {

@@ -183,7 +183,9 @@ export class Game {
     const board = GameSetup.newBoard(gameOptions, rng);
     const cardFinder = new CardFinder();
     const cardsForGame = new GameCards(gameOptions);
-    const dealer = Dealer.newInstance(cardsForGame);
+    // Make the card selection seeded (deterministic)
+    // This means that MCTS/reinforcement bots can cheat by looking into the future.
+    const dealer = Dealer.newInstance(cardsForGame, rng);
 
     const activePlayer = firstPlayer.id;
 
@@ -380,11 +382,14 @@ export class Game {
     Database.getInstance().saveGame(this);
   }
 
-  public toJSON(): string {
-    return JSON.stringify(this.serialize());
-  }
+  // public toJSON(): string {
+  //   return JSON.stringify(this.serialize());
+  // }
 
   public serialize(): SerializedGame {
+    if (this.deferredActions.length > 0) {
+      console.warn(`Serializing game when ${this.deferredActions.length} deferred actions are available`)
+    }
     const result: SerializedGame = {
       activePlayer: this.activePlayer,
       awards: this.awards.map((a) => a.name),
@@ -393,6 +398,7 @@ export class Game {
       colonies: this.colonies.map((colony) => colony.serialize()),
       currentSeed: this.rng.current,
       dealer: this.dealer.serialize(),
+      // I think this is the problem?
       deferredActions: [],
       donePlayers: Array.from(this.donePlayers),
       draftedPlayers: Array.from(this.draftedPlayers),
@@ -430,6 +436,7 @@ export class Game {
       corporationsDraftDirection: this.corporationsDraftDirection,
       corporationsToDraft: this.corporationsToDraft.map((c) => c.name),
     };
+
     if (this.aresData !== undefined) {
       result.aresData = this.aresData;
     }
@@ -1596,6 +1603,12 @@ export class Game {
 
     // Rebuild dealer object to be sure that we will have cards in the same order
     const dealer = Dealer.deserialize(d.dealer);
+    console.log(d.dealer.deck.length, dealer.deck.length);
+    for (let i = 0; i < Math.max(d.dealer.deck.length, dealer.deck.length); i+=1) {
+      if (d.dealer.deck[i] !== dealer.deck[i].name) {
+        console.log("fuck");
+      }
+    }
     const rng = new SeededRandom(d.seed, d.currentSeed);
     const game = new Game(d.id, players, first, d.activePlayer, gameOptions, rng, board, dealer);
     game.spectatorId = d.spectatorId;

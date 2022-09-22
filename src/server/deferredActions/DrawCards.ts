@@ -102,6 +102,7 @@ export class DrawCards<T extends undefined | SelectCard<IProjectCard>> extends D
       }
       return undefined;
     };
+    console.warn(`Creating SelectCard for player.id=${player.id} game.id=${player.game.id}. Available cards ${JSON.stringify(cards.map(card => card.name))}`)
     return new SelectCard(
       msg,
       button,

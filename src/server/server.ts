@@ -15,6 +15,7 @@ import {GameHandler} from './routes/Game';
 import {Route} from './routes/Route';
 import {processRequest} from './requestProcessor';
 import {timeAsync} from './utils/timer';
+import 'source-map-support/register';
 
 process.on('uncaughtException', (err: any) => {
   console.error('UNCAUGHT EXCEPTION', err);

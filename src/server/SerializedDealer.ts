@@ -5,4 +5,5 @@ export type SerializedDealer = {
     deck: Array<CardName>;
     discarded: Array<CardName>;
     preludeDeck: Array<CardName>;
+    seed: number | null
 }

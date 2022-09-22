@@ -5,6 +5,7 @@ import {Player} from '../Player';
 import {PlayerId} from '../../common/Types';
 import {SerializedGame} from '../SerializedGame';
 import {SerializedPlayer} from '../SerializedPlayer';
+const fs = require('fs');
 
 export class Cloner {
   public static clone(
@@ -35,6 +36,13 @@ export class Cloner {
     serialized.clonedGamedId = '#' + sourceGameId;
 
     const game = Game.deserialize(serialized);
+
+    // Original != deserialized
+    // deserialized == serialized
+    fs.writeFileSync("cloner_original", JSON.stringify(serialized)); 
+    fs.writeFileSync("cloner_deserialized", JSON.stringify(game)); 
+    fs.writeFileSync("cloner_serialized", JSON.stringify(game.serialize())); 
+
     return game;
   }
 

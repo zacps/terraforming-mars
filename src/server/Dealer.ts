@@ -6,7 +6,7 @@ import {GameCards} from './GameCards';
 import {CardName} from '../common/cards/CardName';
 import {LogHelper} from './LogHelper';
 import {Game} from './Game';
-import {Random, UnseededRandom} from './Random';
+import {Random, SeededRandom, UnseededRandom} from './Random';
 
 const INCOMPATIBLE_PRELUDES = [CardName.BY_ELECTION, CardName.THE_NEW_SPACE_RACE] as const;
 
@@ -116,7 +116,11 @@ export class Dealer {
 
   public static deserialize(d: SerializedDealer): Dealer {
     // TODO(kberg): serializing the randomizer would help when using a seeded game that reshuffles.
-    const dealer = new Dealer(UnseededRandom.INSTANCE);
+    if (d.seed !== null) {
+      var dealer = new Dealer(new SeededRandom(d.seed));
+    } else {
+      dealer = new Dealer(UnseededRandom.INSTANCE);
+    }
     const cardFinder = new CardFinder();
 
     dealer.corporationCards = cardFinder.corporationCardsFromJSON(d.corporationCards);
@@ -127,11 +131,19 @@ export class Dealer {
   }
 
   public serialize(): SerializedDealer {
-    return {
+    if (this.random instanceof SeededRandom) {
+      var seed: number | null = this.random.seed;
+    } else {
+      seed = null;
+    }
+    const ret = {
       corporationCards: this.corporationCards.map((c) => c.name),
       deck: this.deck.map((c) => c.name),
       discarded: this.discarded.map((c) => c.name),
       preludeDeck: this.preludeDeck.map((c) => c.name),
+      seed: seed
     };
+
+    return ret;
   }
 }

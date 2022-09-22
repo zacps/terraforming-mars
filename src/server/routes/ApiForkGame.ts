@@ -5,6 +5,7 @@ import { GameId, isGameId, PlayerId } from "../../common/Types";
 import { Cloner } from "../database/Cloner";
 import { Server } from "../models/ServerModel";
 import { Player } from "../Player";
+const fs = require('fs');
 
 export class ApiForkGame extends Handler {
   public static readonly INSTANCE = new ApiForkGame();
@@ -63,6 +64,15 @@ export class ApiForkGame extends Handler {
       game.serialize()
     );
 
+    const test = game.serialize();
+    [...Array(10)].map((_, _i) => {
+      console.assert(JSON.stringify(test) === JSON.stringify(game.serialize()))
+    });
+
+    // Identical
+    fs.writeFileSync("fork_original", JSON.stringify(game)); 
+    fs.writeFileSync("fork_serialized", JSON.stringify(game.serialize())); 
+
     // Not async for some reason?
     clonedGame.save();
 
@@ -78,6 +88,17 @@ export class ApiForkGame extends Handler {
 
     const gameModel = Server.getGameModel(clonedGame);
     const simplePlayerModels = Server.getSimpleGameModel(clonedGame).players;
+
+    // const reloadedClonedGame = await ctx.gameLoader.getGame(clonedGame.id);
+    // const reloadedString = JSON.stringify(reloadedClonedGame);
+    // const originalString = JSON.stringify(game);
+
+    // fs.writeFileSync("original", originalString); 
+    // fs.writeFileSync("reloaded", reloadedString); 
+
+    // console.warn("Reloaded game deferred actions length", reloadedClonedGame?.deferredActions.length);
+    // console.warn("Game deferred actions length", game.deferredActions.length);
+    // console.assert(reloadedClonedGame === game);
 
     ctx.route.writeJson(res, {
       players: simplePlayerModels,
